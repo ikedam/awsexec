@@ -41,28 +41,46 @@
 
 ## Installation
 
-### Binary Installation
+### Binary Installation (Download)
 
 * Download the awsexec binary appropriate for your environment from [GitHub Releases](https://github.com/ikedam/awsexec/releases) and place it in a location where the path is available.
 * For example, you can install it with the following steps:
 
-    1. Download the archive containing the binary:
+    1. Download the binary:
 
         ```sh
-        curl -L -o /tmp/awsexec.tar.gz https://github.com/ikedam/awsexec/releases/download/latest/awsexec-linux-amd64.tar.gz
+        curl -L -o /tmp/awsexec https://github.com/ikedam/awsexec/releases/download/latest/awsexec_linux_amd64
         ```
 
-    2. Extract the archive:
-
-        ```sh
-        tar -xzf /tmp/awsexec.tar.gz -C /tmp
-        ```
-
-    3. Place the binary:
+    2. Place the binary:
 
         ```sh
         sudo cp /tmp/awsexec /usr/local/bin/awsexec
         ```
+
+    3. Grant execute permission to the binary:
+
+        ```sh
+        chmod +x /usr/local/bin/awsexec
+        ```
+
+### Binary Installation (Build)
+
+* You can build the binary using Docker. The built binary will be generated at `build/awsexec`.
+* For example, you can build it with the following steps:
+
+    1. Build the binary:
+
+        ```sh
+        GOOS=darwin GOARCH=arm64 docker compose run --rm build
+        ```
+
+    2. Place the binary:
+
+        ```sh
+        sudo cp build/awsexec /usr/local/bin/awsexec
+        ```
+
 
 ### Shell Script Installation
 

@@ -44,53 +44,47 @@
 
 ## インストール方法
 
-### バイナリーでのインストール方法
-
-* ご自分の環境に合わせた awsexec のバイナリーを [GitHub Releases](https://github.com/ikedam/awsexec/releases) からダウンロードして、パスが通った場所に配置してください。
-* 例えば以下の手順でインストールできます:
-
-    1. バイナリーを含むアーカイブをダウンロードする:
-
-        ```sh
-        curl -L -o /tmp/awsexec.tar.gz https://github.com/ikedam/awsexec/releases/download/latest/awsexec-linux-amd64.tar.gz
-        ```
-
-    2. アーカイブを展開する:
-
-        ```sh
-        tar -xzf /tmp/awsexec.tar.gz -C /tmp
-        ```
-
-    3. バイナリーを配置する:
-
-        ```sh
-        sudo cp /tmp/awsexec /usr/local/bin/awsexec
-        ```
-
 ### バイナリーでのインストール方法 (ダウンロード)
 
 * ご自分の環境に合わせた awsexec のバイナリーを [GitHub Releases](https://github.com/ikedam/awsexec/releases) からダウンロードして、パスが通った場所に配置してください。
 * 例えば以下の手順でインストールできます:
 
-    1. バイナリーを含むアーカイブをダウンロードする:
+    1. バイナリーファイルをダウンロードする:
 
         ```sh
-        curl -L -o /tmp/awsexec.tar.gz https://github.com/ikedam/awsexec/releases/download/latest/awsexec-darwin-arm64.tar.gz
+        curl -L -o /tmp/awsexec https://github.com/ikedam/awsexec/releases/download/latest/awsexec_darwin_arm64
         ```
 
-    2. アーカイブを展開する:
-
-        ```sh
-        tar -xzf /tmp/awsexec.tar.gz -C /tmp
-        ```
-
-    3. バイナリーを配置する:
+    2. バイナリーを配置する:
 
         ```sh
         sudo cp /tmp/awsexec /usr/local/bin/awsexec
         ```
 
-### シェルスクリプトのインストール方法 (ビルド)
+    3. バイナリーに実行権限を付与:
+
+        ```sh
+        chmod +x /usr/local/bin/awsexec
+        ```
+
+### バイナリーでのインストール方法 (ビルド)
+
+* Docker がインストールされている環境であれば、バイナリーをビルドすることもできます。ビルドしたバイナリーは `build/awsexec` に生成されます。
+* 例えば以下の手順でインストールできます:
+
+    1. バイナリーをビルドする:
+
+        ```sh
+        GOOS=darwin GOARCH=arm64 docker compose run --rm build
+        ```
+
+    2. バイナリーを配置する:
+
+        ```sh
+        sudo cp build/awsexec /usr/local/bin/awsexec
+        ```
+
+### シェルスクリプトのインストール方法
 
 * シェルスクリプトが利用可能な環境であれば、シェルスクリプトをコピペでご自分の環境に配置することもできます。
     * Linux や macOS では通常利用可能です。
