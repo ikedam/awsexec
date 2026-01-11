@@ -1,5 +1,7 @@
 # awsexec: execute command with aws configure export-credentials
 
+[日本語](README.ja.md)
+
 ## Background
 
 * AWS CLI provides `aws configure export-credentials` command, which exports credentials in a format that can be set as environment variables. By executing the authentication process with AWS CLI and passing only the resulting credentials to applications, you can use authentication processes that are not directly supported by applications.
