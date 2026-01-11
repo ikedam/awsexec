@@ -1,0 +1,11 @@
+services:
+  build:
+    image: golang:1.25.5-trixie
+    environment:
+      - CGO_ENABLED=0
+      - GOOS
+      - GOARCH
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: go build -o build/awsexec ./cmd/awsexec/main.go
