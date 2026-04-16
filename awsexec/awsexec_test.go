@@ -187,6 +187,33 @@ func TestAwsexec_Run(t *testing.T) {
 	}
 }
 
+func TestAwsexec_getRegion(t *testing.T) {
+	t.Run("prefers AWS_DEFAULT_REGION when aws configure get fails", func(t *testing.T) {
+		os.Setenv("AWS_DEFAULT_REGION", "ap-northeast-1")
+		defer os.Unsetenv("AWS_DEFAULT_REGION")
+		os.Unsetenv("AWS_REGION")
+		defer func() { _ = os.Unsetenv("AWS_REGION") }()
+
+		a := New(context.Background())
+		got := a.getRegion(context.Background(), "nonexistent-profile-no-region")
+		if got != "ap-northeast-1" {
+			t.Errorf("getRegion() = %q, want ap-northeast-1", got)
+		}
+	})
+	t.Run("falls back to AWS_REGION when AWS_DEFAULT_REGION unset", func(t *testing.T) {
+		os.Unsetenv("AWS_DEFAULT_REGION")
+		defer func() { _ = os.Unsetenv("AWS_DEFAULT_REGION") }()
+		os.Setenv("AWS_REGION", "ap-northeast-1")
+		defer os.Unsetenv("AWS_REGION")
+
+		a := New(context.Background())
+		got := a.getRegion(context.Background(), "nonexistent-profile")
+		if got != "ap-northeast-1" {
+			t.Errorf("getRegion() = %q, want ap-northeast-1", got)
+		}
+	})
+}
+
 func TestAWSCommandExporter_ExportCredentials(t *testing.T) {
 	// This test requires AWS CLI to be installed and configured.
 	// Skip if not available.

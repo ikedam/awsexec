@@ -128,6 +128,14 @@
     * To avoid using the wrong profile, specifying the `AWS_PROFILE` environment variable is required.
     * If you don't need to use multiple profiles, you can set `AWS_PROFILE=default` in your user profile.
 
+## Environment Variables Set for the Subprocess
+
+The following environment variables are set for the subprocess that awsexec runs:
+
+* **Credentials**: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` (when using temporary credentials), and `AWS_CREDENTIAL_EXPIRATION` (when available) are set from the result of `aws configure export-credentials`.
+* **AWS_PROFILE reset**: The subprocess receives credentials via the environment variables above, so the parent's `AWS_PROFILE` is **not** inherited. This ensures the subprocess uses only the provided credentials, not profile-based resolution.
+* **Region**: `AWS_DEFAULT_REGION` and `AWS_REGION` are set when a value is available. The value is determined in this order: (1) the `region` setting for the chosen profile in `~/.aws/config`, (2) the parent's `AWS_DEFAULT_REGION`, (3) the parent's `AWS_REGION`. If none are set, these variables are not added.
+
 ## Building the Binary
 
 You can build the binary using Docker. The built binary will be generated at `build/awsexec`.

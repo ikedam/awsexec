@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 )
 
@@ -55,8 +56,11 @@ func (a *Awsexec) Run(ctx context.Context, args []string) error {
 		return fmt.Errorf("failed to export credentials: %w", err)
 	}
 
+	// Resolve region from profile config or current environment
+	region := a.getRegion(ctx, profile)
+
 	// Execute the command with credentials set as environment variables
-	return a.executeCommand(ctx, creds, command)
+	return a.executeCommand(ctx, creds, command, region)
 }
 
 // parseArgs parses command line arguments to extract profile and command.
@@ -98,9 +102,29 @@ func (a *Awsexec) parseArgs(args []string) (string, []string, error) {
 	return profile, command, nil
 }
 
+// getRegion returns the AWS region for the given profile.
+// It tries: (1) profile's region via "aws configure get region", (2) AWS_DEFAULT_REGION, (3) AWS_REGION.
+func (a *Awsexec) getRegion(ctx context.Context, profile string) string {
+	args := []string{"configure", "get", "region"}
+	if profile != "" {
+		args = append(args, "--profile", profile)
+	}
+	cmd := exec.CommandContext(ctx, "aws", args...)
+	out, err := cmd.Output()
+	if err == nil {
+		if r := strings.TrimSpace(string(out)); r != "" {
+			return r
+		}
+	}
+	if r := os.Getenv("AWS_DEFAULT_REGION"); r != "" {
+		return r
+	}
+	return os.Getenv("AWS_REGION")
+}
+
 // executeCommand executes the specified command with AWS credentials set as environment variables.
 // This uses syscall.Exec to replace the current process with the command, so it does not return on success.
-func (a *Awsexec) executeCommand(_ context.Context, creds *Credentials, command []string) error {
+func (a *Awsexec) executeCommand(_ context.Context, creds *Credentials, command []string, region string) error {
 	if len(command) == 0 {
 		return fmt.Errorf("command is empty")
 	}
@@ -111,8 +135,15 @@ func (a *Awsexec) executeCommand(_ context.Context, creds *Credentials, command 
 		return fmt.Errorf("command not found: %w", err)
 	}
 
-	// Prepare environment variables
-	env := os.Environ()
+	// Build environment: inherit from parent but reset AWS_PROFILE so the subprocess
+	// uses only the credential env vars.
+	env := make([]string, 0, 64)
+	for _, e := range os.Environ() {
+		if strings.HasPrefix(e, "AWS_PROFILE=") {
+			continue
+		}
+		env = append(env, e)
+	}
 	env = append(env, fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", creds.AccessKeyID))
 	env = append(env, fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", creds.SecretAccessKey))
 	if creds.SessionToken != "" {
@@ -120,6 +151,10 @@ func (a *Awsexec) executeCommand(_ context.Context, creds *Credentials, command 
 	}
 	if creds.Expiration != "" {
 		env = append(env, fmt.Sprintf("AWS_CREDENTIAL_EXPIRATION=%s", creds.Expiration))
+	}
+	if region != "" {
+		env = append(env, fmt.Sprintf("AWS_DEFAULT_REGION=%s", region))
+		env = append(env, fmt.Sprintf("AWS_REGION=%s", region))
 	}
 
 	// Prepare arguments (first argument should be the command name)

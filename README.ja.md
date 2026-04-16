@@ -129,6 +129,14 @@
     * 誤ったプロファイルの利用を避けるため、 `AWS_PROFILE` 環境変数の指定を必須にしています。
     * 複数のプロファイルを使い分ける必要がない、という場合は `AWS_PROFILE=default` をユーザープロファイルで設定しておくとよいでしょう。
 
+## サブプロセスに設定する環境変数
+
+awsexec が起動するサブプロセスには、次のように環境変数が設定されます。
+
+* **認証情報**: `AWS_ACCESS_KEY_ID`・`AWS_SECRET_ACCESS_KEY`・`AWS_SESSION_TOKEN`（一時認証時）・`AWS_CREDENTIAL_EXPIRATION`（取得時）を、`aws configure export-credentials` の結果で上書きします。
+* **AWS_PROFILE のリセット**: サブプロセスでは認証情報を上記の環境変数で渡すため、親環境の `AWS_PROFILE` は**引き継がれません**。これにより、サブプロセスがプロファイル経由ではなく、渡された認証情報のみを使うようにします。
+* **リージョン**: `AWS_DEFAULT_REGION` と `AWS_REGION` を設定します。値は次の順で決まります。(1) 指定プロファイルの `~/.aws/config` の `region`、(2) 親環境の `AWS_DEFAULT_REGION`、(3) 親環境の `AWS_REGION`。いずれもない場合はこれらは設定しません。
+
 ## バイナリーのビルド方法
 
 Docker を使用してバイナリーのビルドができます。ビルドしたバイナリーは `build/awsexec` に生成されます。
