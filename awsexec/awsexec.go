@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"syscall"
 )
@@ -124,7 +125,7 @@ func (a *Awsexec) getRegion(ctx context.Context, profile string) string {
 
 // executeCommand executes the specified command with AWS credentials set as environment variables.
 // This uses syscall.Exec to replace the current process with the command, so it does not return on success.
-func (a *Awsexec) executeCommand(_ context.Context, creds *Credentials, command []string, region string) error {
+func (a *Awsexec) executeCommand(ctx context.Context, creds *Credentials, command []string, region string) error {
 	if len(command) == 0 {
 		return fmt.Errorf("command is empty")
 	}
@@ -160,7 +161,21 @@ func (a *Awsexec) executeCommand(_ context.Context, creds *Credentials, command 
 	// Prepare arguments (first argument should be the command name)
 	args := command
 
-	// Execute the command using syscall.Exec
+	// Windows does not support syscall.Exec (process replacement). Run as a child process instead.
+	// We still propagate stdio, env, and exit code as closely as possible.
+	if runtime.GOOS == "windows" {
+		cmd := exec.CommandContext(ctx, cmdPath, args[1:]...)
+		cmd.Env = env
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to execute command: %w", err)
+		}
+		return nil
+	}
+
+	// Execute the command using syscall.Exec (Unix-like OSes).
 	// This replaces the current process, so it does not return on success.
 	// On error, it returns an error.
 	err = syscall.Exec(cmdPath, args, env)
